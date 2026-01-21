@@ -1,11 +1,12 @@
 import { createServerClient } from '@supabase/ssr';
 import type { Cookies } from '@sveltejs/kit';
 import type { Database } from '$lib/database.types';
+import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
 
 export function createSupabaseServerClient(cookieStore: Cookies) {
 	return createServerClient<Database>(
-		import.meta.env.PUBLIC_SUPABASE_URL,
-		import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
+		PUBLIC_SUPABASE_URL,
+		PUBLIC_SUPABASE_ANON_KEY,
 		{
 			cookies: {
 				get(name: string) {
