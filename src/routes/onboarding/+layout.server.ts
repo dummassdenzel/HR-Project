@@ -16,6 +16,7 @@ export async function load(event: RequestEvent) {
 	}
 
 	// User is authenticated but has no org - show onboarding
+	// Form data from actions will be available via data.form in the component
 	return {
 		user
 	};

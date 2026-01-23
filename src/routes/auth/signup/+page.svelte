@@ -59,6 +59,7 @@
 						name="full_name"
 						type="text"
 						autocomplete="name"
+						value={data?.full_name || ''}
 						class="mt-1"
 					/>
 				</div>

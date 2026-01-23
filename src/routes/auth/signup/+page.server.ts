@@ -16,7 +16,8 @@ export const actions: Actions = {
 		if (!email || !password) {
 			return fail(400, {
 				error: 'Email and password are required',
-				email
+				email,
+				full_name: fullName
 			});
 		}
 
@@ -25,7 +26,8 @@ export const actions: Actions = {
 		if (!emailRegex.test(email)) {
 			return fail(400, {
 				error: 'Invalid email format',
-				email
+				email,
+				full_name: fullName
 			});
 		}
 
@@ -33,7 +35,8 @@ export const actions: Actions = {
 		if (password.length < 8) {
 			return fail(400, {
 				error: 'Password must be at least 8 characters',
-				email
+				email,
+				full_name: fullName
 			});
 		}
 
@@ -53,13 +56,15 @@ export const actions: Actions = {
 			if (error.message.includes('already registered')) {
 				return fail(400, {
 					error: 'An account with this email already exists',
-					email
+					email,
+					full_name: fullName
 				});
 			}
 
 			return fail(500, {
 				error: error.message || 'Failed to create account',
-				email
+				email,
+				full_name: fullName
 			});
 		}
 
