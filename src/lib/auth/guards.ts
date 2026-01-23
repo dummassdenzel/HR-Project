@@ -8,6 +8,17 @@ import type { MembershipRole, SessionUser } from './types';
  */
 
 /**
+ * Role hierarchy levels
+ * Higher numbers = more permissions
+ * Used for hierarchical role checking (hr_admin can access manager/employee pages)
+ */
+const ROLE_LEVEL: Record<MembershipRole, number> = {
+	employee: 1,
+	manager: 2,
+	hr_admin: 3
+};
+
+/**
  * Require user to be authenticated
  * Redirects to signin if not authenticated
  */
@@ -30,8 +41,9 @@ export function requireOrg(user: SessionUser): void {
 }
 
 /**
- * Require user to have a specific role
- * Returns 403 Forbidden if role doesn't match
+ * Require user to have a specific role (strict equality)
+ * Returns 403 Forbidden if role doesn't match exactly
+ * Use this when you need exact role match
  */
 export function requireRole(user: SessionUser, requiredRole: MembershipRole): void {
 	if (!user.current_organization_id || !user.current_role) {
@@ -39,6 +51,25 @@ export function requireRole(user: SessionUser, requiredRole: MembershipRole): vo
 	}
 
 	if (user.current_role !== requiredRole) {
+		throw error(403, 'Forbidden');
+	}
+}
+
+/**
+ * Require user to have a role at or above the required level (hierarchical)
+ * hr_admin can access manager/employee pages
+ * manager can access employee pages
+ * employee can only access employee pages
+ */
+export function requireRoleOrHigher(user: SessionUser, requiredRole: MembershipRole): void {
+	if (!user.current_organization_id || !user.current_role) {
+		throw redirect(303, '/onboarding');
+	}
+
+	const userLevel = ROLE_LEVEL[user.current_role];
+	const requiredLevel = ROLE_LEVEL[requiredRole];
+
+	if (userLevel < requiredLevel) {
 		throw error(403, 'Forbidden');
 	}
 }
@@ -67,8 +98,13 @@ export function requireUserWithOrg(event: RequestEvent): SessionUser {
 }
 
 /**
- * Combined guard: Require authenticated user with specific role
+ * Combined guard: Require authenticated user with specific role or higher (hierarchical)
  * Common pattern for role-based routes
+ * 
+ * Examples:
+ * - requireUserWithRole(event, 'manager') allows hr_admin and manager
+ * - requireUserWithRole(event, 'employee') allows all roles
+ * - requireUserWithRole(event, 'hr_admin') allows only hr_admin
  */
 export function requireUserWithRole(
 	event: RequestEvent,
@@ -76,7 +112,18 @@ export function requireUserWithRole(
 ): SessionUser {
 	const user = requireUser(event);
 	requireOrg(user);
-	requireRole(user, requiredRole);
+	
+	if (!user.current_role) {
+		throw error(500, 'User role missing');
+	}
+
+	const userLevel = ROLE_LEVEL[user.current_role];
+	const requiredLevel = ROLE_LEVEL[requiredRole];
+
+	if (userLevel < requiredLevel) {
+		throw error(403, 'Forbidden');
+	}
+
 	return user;
 }
 
