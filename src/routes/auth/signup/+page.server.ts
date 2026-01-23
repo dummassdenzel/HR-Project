@@ -1,6 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
-import { getSessionUser } from '$lib/auth/server';
 
 /**
  * Sign up action
@@ -70,7 +69,8 @@ export const actions: Actions = {
 			return {
 				success: true,
 				requiresVerification: true,
-				message: 'Please check your email to verify your account'
+				message: 'Please check your email to verify your account',
+				email
 			};
 		}
 
