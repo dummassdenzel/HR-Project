@@ -12,6 +12,7 @@
 	}
 
 	let { data }: Props = $props();
+	let pending = $state(false);
 	
 	// Get form data from action result (SvelteKit 5)
 	let formData = $derived($page.form as { error?: string; name?: string } | null);
@@ -36,7 +37,13 @@
 			</div>
 		{/if}
 
-		<form method="POST">
+		<form method="POST" use:enhance={() => {
+			pending = true;
+			return async ({ update }) => {
+				await update();
+				pending = false;
+			};
+		}}>
 			<div class="space-y-4">
 				<div>
 					<Label for="name">Organization Name</Label>
@@ -50,6 +57,7 @@
 						maxlength={100}
 						value={formData?.name || ''}
 						placeholder="Acme Corporation"
+						disabled={pending}
 						class="mt-1"
 					/>
 					<p class="mt-1 text-xs text-gray-500">
@@ -58,8 +66,8 @@
 				</div>
 
 				<div>
-					<Button type="submit" class="w-full" variant="default">
-						Create Organization
+					<Button type="submit" class="w-full" variant="default" disabled={pending}>
+						{pending ? 'Creating organization...' : 'Create Organization'}
 					</Button>
 				</div>
 			</div>

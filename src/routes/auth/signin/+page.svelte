@@ -37,7 +37,8 @@
 
 		<form method="POST" use:enhance={() => {
 			pending = true;
-			return async () => {
+			return async ({ update }) => {
+				await update();
 				pending = false;
 			};
 		}}>
@@ -51,6 +52,7 @@
 						autocomplete="email"
 						required
 						value={data?.email || ''}
+						disabled={pending}
 						class="mt-1"
 					/>
 				</div>
@@ -63,13 +65,14 @@
 						type="password"
 						autocomplete="current-password"
 						required
+						disabled={pending}
 						class="mt-1"
 					/>
 				</div>
 
 				<div>
 					<Button type="submit" class="w-full" variant="default" disabled={pending}>
-						Sign in
+						{pending ? 'Signing in...' : 'Sign in'}
 					</Button>
 				</div>
 			</div>

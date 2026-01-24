@@ -12,6 +12,7 @@
 	}
 
 	let { data, form }: Props = $props();
+	let pending = $state(false);
 </script>
 
 <div class="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
@@ -44,7 +45,13 @@
 			</div>
 		{/if}
 
-		<form method="POST" >
+		<form method="POST" use:enhance={() => {
+			pending = true;
+			return async ({ update }) => {
+				await update();
+				pending = false;
+			};
+		}}>
 			<div class="space-y-4">
 				<div>
 					<Label for="full_name">Full Name (Optional)</Label>
@@ -54,6 +61,7 @@
 						type="text"
 						autocomplete="name"
 						value={data?.full_name || ''}
+						disabled={pending}
 						class="mt-1"
 					/>
 				</div>
@@ -67,6 +75,7 @@
 						autocomplete="email"
 						required
 						value={data?.email || ''}
+						disabled={pending}
 						class="mt-1"
 					/>
 				</div>
@@ -80,14 +89,15 @@
 						autocomplete="new-password"
 						required
 						minlength={8}
+						disabled={pending}
 						class="mt-1"
 					/>
 					<p class="mt-1 text-xs text-gray-500">Must be at least 8 characters</p>
 				</div>
 
 				<div>
-					<Button type="submit" class="w-full" variant="default" >
-						Sign up
+					<Button type="submit" class="w-full" variant="default" disabled={pending}>
+						{pending ? 'Creating account...' : 'Sign up'}
 					</Button>
 				</div>
 			</div>
