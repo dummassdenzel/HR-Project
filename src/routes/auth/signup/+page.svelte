@@ -12,7 +12,6 @@
 	}
 
 	let { data, form }: Props = $props();
-	let pending = $state(false);
 </script>
 
 <div class="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
@@ -45,12 +44,7 @@
 			</div>
 		{/if}
 
-		<form method="POST" use:enhance={ () => {
-			pending = true;
-			return async () => {
-				pending = false;
-			};
-		}}>
+		<form method="POST" >
 			<div class="space-y-4">
 				<div>
 					<Label for="full_name">Full Name (Optional)</Label>
@@ -92,7 +86,7 @@
 				</div>
 
 				<div>
-					<Button type="submit" class="w-full" variant="default" disabled={pending}>
+					<Button type="submit" class="w-full" variant="default" >
 						Sign up
 					</Button>
 				</div>
