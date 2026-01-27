@@ -6,12 +6,7 @@
 	import Card from '$lib/components/ui/card.svelte';
 	import type { ActionData } from './$types';
 
-	interface Props {
-		data?: ActionData;
-		form?: any;
-	}
-
-	let { data, form }: Props = $props();
+	let { form }: { form: ActionData } = $props();
 	let pending = $state(false);
 </script>
 
@@ -25,21 +20,21 @@
 			</p>
 		</div>
 
-		{#if data?.error}
+		{#if form?.error}
 			<div class="mb-4 rounded-md bg-red-50 p-4">
 				<div class="flex">
 					<div class="ml-3">
-						<h3 class="text-sm font-medium text-red-800">{data.error}</h3>
+						<h3 class="text-sm font-medium text-red-800">{form.error}</h3>
 					</div>
 				</div>
 			</div>
 		{/if}
 
-		{#if data?.success && data?.requiresVerification}
+		{#if form?.success && form?.requiresVerification}
 			<div class="mb-4 rounded-md bg-green-50 p-4">
 				<div class="flex">
 					<div class="ml-3">
-						<h3 class="text-sm font-medium text-green-800">{data.message}</h3>
+						<h3 class="text-sm font-medium text-green-800">{form.message}</h3>
 					</div>
 				</div>
 			</div>
@@ -60,7 +55,7 @@
 						name="full_name"
 						type="text"
 						autocomplete="name"
-						value={data?.full_name || ''}
+						value={form?.full_name || ''}
 						disabled={pending}
 						class="mt-1"
 					/>
@@ -74,7 +69,7 @@
 						type="email"
 						autocomplete="email"
 						required
-						value={data?.email || ''}
+						value={form?.email || ''}
 						disabled={pending}
 						class="mt-1"
 					/>

@@ -1,5 +1,5 @@
 import { redirect } from '@sveltejs/kit';
-import type { RequestEvent } from '@sveltejs/kit';
+import type { LayoutServerLoad } from './$types';
 import { requireUser } from '$lib/auth/guards';
 
 /**
@@ -7,7 +7,7 @@ import { requireUser } from '$lib/auth/guards';
  * Requires authentication
  * Redirects users with orgs to dashboard
  */
-export async function load(event: RequestEvent) {
+export const load: LayoutServerLoad = (event) => {
 	const user = requireUser(event);
 
 	// If user already has organization, redirect to dashboard
@@ -20,4 +20,4 @@ export async function load(event: RequestEvent) {
 	return {
 		user
 	};
-}
+};

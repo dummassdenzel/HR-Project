@@ -5,17 +5,13 @@
 	import Input from '$lib/components/ui/input.svelte';
 	import Label from '$lib/components/ui/label.svelte';
 	import Card from '$lib/components/ui/card.svelte';
-	import type { PageData } from './$types';
+	import type { PageData, ActionData } from './$types';
 
-	interface Props {
-		data: PageData;
-	}
-
-	let { data }: Props = $props();
+	let { data }: { data: PageData } = $props();
 	let pending = $state(false);
 	
 	// Get form data from action result (SvelteKit 5)
-	let formData = $derived($page.form as { error?: string; name?: string } | null);
+	let formData = $derived($page.form as ActionData);
 </script>
 
 <div class="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
