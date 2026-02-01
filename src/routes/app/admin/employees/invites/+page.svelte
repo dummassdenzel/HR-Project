@@ -9,10 +9,26 @@
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let resendPending = $state<string | null>(null);
 	let revokePending = $state<string | null>(null);
+	let revokeConfirmedId = $state<string | null>(null);
 
 	function formatDate(dateString: string | null): string {
 		if (!dateString) return 'N/A';
 		return new Date(dateString).toLocaleDateString(undefined, { dateStyle: 'medium' });
+	}
+
+	function relativeExpiry(expiresAt: string | null): string {
+		if (!expiresAt) return 'N/A';
+		const exp = new Date(expiresAt);
+		const now = new Date();
+		const ms = exp.getTime() - now.getTime();
+		if (ms <= 0) return 'Expired';
+		const days = Math.floor(ms / (24 * 60 * 60 * 1000));
+		const hours = Math.floor((ms % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+		if (days > 0) return `Expires in ${days} day${days === 1 ? '' : 's'}`;
+		if (hours > 0) return `Expires in ${hours} hour${hours === 1 ? '' : 's'}`;
+		const minutes = Math.floor((ms % (60 * 60 * 1000)) / (60 * 1000));
+		if (minutes > 0) return `Expires in ${minutes} minute${minutes === 1 ? '' : 's'}`;
+		return 'Expires soon';
 	}
 
 	function formatRole(role: string): string {
@@ -104,8 +120,8 @@
 								<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
 									{formatRole(invite.role)}
 								</td>
-								<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-									{formatDate(invite.expires_at)}
+								<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500" title={formatDate(invite.expires_at)}>
+									{relativeExpiry(invite.expires_at)}
 								</td>
 								<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
 									{formatDate(invite.created_at)}
@@ -136,11 +152,21 @@
 										<form
 											method="POST"
 											action="?/revoke"
+											onsubmit={(e) => {
+												if (revokeConfirmedId !== invite.id) {
+													e.preventDefault();
+													if (confirm('Are you sure you want to revoke this invite?')) {
+														revokeConfirmedId = invite.id;
+														(e.target as HTMLFormElement).requestSubmit();
+													}
+												}
+											}}
 											use:enhance={() => {
 												revokePending = invite.id;
 												return async ({ update, result }) => {
 													await update();
 													revokePending = null;
+													revokeConfirmedId = null;
 													if (result.type === 'success') await invalidateAll();
 												};
 											}}
