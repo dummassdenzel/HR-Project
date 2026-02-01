@@ -19,17 +19,12 @@ export const load: PageServerLoad = async (event) => {
 	}
 
 	// Read-only preview (granted to anon + authenticated)
-	const { data: previewRow, error } = await (event.locals.supabase.rpc as any)(
+	const { data: previewRow } = await (event.locals.supabase.rpc as any)(
 		'preview_employee_invite',
 		{ invite_token: token }
 	).maybeSingle();
 
-	// RPC returns TABLE; Supabase may return array — take first row if so
-	const preview = previewRow
-		? Array.isArray(previewRow)
-			? previewRow[0] ?? null
-			: previewRow
-		: null;
+	const preview = previewRow ?? null;
 
 	if (preview?.status === 'accepted') {
 		throw redirect(303, '/app/dashboard');
