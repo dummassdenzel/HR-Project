@@ -12,8 +12,9 @@
 
 <div class="min-h-screen bg-gray-50 px-4 py-8 sm:px-6 lg:px-8">
 	<div class="mx-auto max-w-md">
-		<div class="mb-6">
+		<div class="mb-6 flex items-center gap-4">
 			<a href="/app/admin" class="text-sm text-primary hover:underline">&larr; Back to admin</a>
+			<a href="/app/admin/employees/invites" class="text-sm text-primary hover:underline">View pending invitations</a>
 		</div>
 
 		<Card class="p-8">

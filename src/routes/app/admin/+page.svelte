@@ -21,6 +21,13 @@
 				<h2 class="text-lg font-semibold text-gray-900">Invite employee</h2>
 				<p class="mt-1 text-sm text-gray-600">Send an invitation to join your organization.</p>
 			</a>
+			<a
+				href="/app/admin/employees/invites"
+				class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition hover:border-primary/50 hover:shadow-md"
+			>
+				<h2 class="text-lg font-semibold text-gray-900">Pending invitations</h2>
+				<p class="mt-1 text-sm text-gray-600">List, resend, or revoke pending invites.</p>
+			</a>
 		</div>
 	</div>
 </div>
