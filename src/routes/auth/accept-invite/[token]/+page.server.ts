@@ -6,13 +6,36 @@ import { requireUser } from '$lib/auth/guards';
  * Accept Invite Page — /auth/accept-invite/[token]
  *
  * User lands with token in the path from the email link.
+ * Load fetches invite preview (org name, role, status); if already accepted, redirect to dashboard.
  * If not logged in, we show sign in / sign up with redirect back here.
  * If logged in, they can accept; RPC creates membership and marks invite accepted.
  */
 export const load: PageServerLoad = async (event) => {
 	const token = event.params.token ?? null;
 	const user = event.locals.user ?? null;
-	return { token, user };
+
+	if (!token) {
+		return { token: null, user, preview: null };
+	}
+
+	// Read-only preview (granted to anon + authenticated)
+	const { data: previewRow, error } = await (event.locals.supabase.rpc as any)(
+		'preview_employee_invite',
+		{ invite_token: token }
+	).maybeSingle();
+
+	// RPC returns TABLE; Supabase may return array — take first row if so
+	const preview = previewRow
+		? Array.isArray(previewRow)
+			? previewRow[0] ?? null
+			: previewRow
+		: null;
+
+	if (preview?.status === 'accepted') {
+		throw redirect(303, '/app/dashboard');
+	}
+
+	return { token, user, preview: preview ?? null };
 };
 
 export const actions: Actions = {
@@ -35,7 +58,7 @@ export const actions: Actions = {
 				return fail(404, { error: 'This invitation is invalid or has expired.' });
 			}
 			if (msg.includes('already used')) {
-				return fail(400, { error: 'This invitation has already been used.' });
+				throw redirect(303, '/app/dashboard');
 			}
 			if (msg.includes('expired')) {
 				return fail(400, { error: 'This invitation has expired.' });
