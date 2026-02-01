@@ -79,10 +79,10 @@ export const actions: Actions = {
 			};
 		}
 
-		// User is signed up and session is created
-		// hooks.server.ts will fetch user + memberships on next request
-		// New users always go to onboarding (no org yet)
-		throw redirect(303, '/onboarding');
+		// User is signed up and session is created — redirect to requested path or onboarding
+		const redirectTo = event.url.searchParams.get('redirect');
+		const path = redirectTo?.startsWith('/') && !redirectTo.startsWith('//') ? redirectTo : '/onboarding';
+		throw redirect(303, path);
 	}
 };
 

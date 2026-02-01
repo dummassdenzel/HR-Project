@@ -33,12 +33,10 @@ export const actions: Actions = {
 			});
 		}
 
-		// Sign in successful
-		// hooks.server.ts will fetch user + memberships on next request
-		// Check if user has organization membership
-		// Note: We need to wait for next request for user data to be in locals
-		// So we'll check after redirect - the target route will handle it
-		throw redirect(303, '/app/dashboard');
+		// Sign in successful — redirect to requested path or dashboard
+		const redirectTo = event.url.searchParams.get('redirect');
+		const path = redirectTo?.startsWith('/') && !redirectTo.startsWith('//') ? redirectTo : '/app/dashboard';
+		throw redirect(303, path);
 	}
 };
 
