@@ -7,37 +7,41 @@ type Employee201Profile = Database['public']['Tables']['employee_201_profiles'][
 
 /**
  * HR Admin 201 Review Page
- * 
+ *
  * View submitted profile details and approve/reject
+ * Route uses profile id (row primary key) as the true identifier
  * RLS ensures only profiles in the admin's organization are accessible
  */
 export const load: PageServerLoad = async (event) => {
 	const user = requireUserWithRole(event, 'hr_admin');
-	const { userId } = event.params;
+	const { profileId } = event.params;
 
 	if (!user.current_organization_id) {
 		throw fail(400, { error: 'Organization required' });
 	}
 
-	if (!userId) {
-		throw error(400, 'User ID required');
+	if (!profileId) {
+		throw error(400, 'Profile ID required');
 	}
 
-	// Get the profile for the specified user
-	// RLS policy handles access control
+	// Get the profile by id; RLS policy restricts to admin's org
 	const { data: profile, error: fetchError } = await event.locals.supabase
 		.from('employee_201_profiles')
 		.select('*')
-		.eq('user_id', userId)
-		.eq('organization_id', user.current_organization_id)
+		.eq('id', profileId)
 		.maybeSingle();
 
 	if (fetchError) {
-		console.error('[admin/201/[userId]] Error fetching profile:', fetchError);
+		console.error('[admin/201/[profileId]] Error fetching profile:', fetchError);
 		throw fail(500, { error: 'Failed to load profile' });
 	}
 
 	if (!profile) {
+		throw error(404, 'Profile not found');
+	}
+
+	// RLS ensures we only see org profiles; double-check for safety
+	if (profile.organization_id !== user.current_organization_id) {
 		throw error(404, 'Profile not found');
 	}
 
@@ -52,31 +56,26 @@ export const load: PageServerLoad = async (event) => {
 };
 
 export const actions: Actions = {
-	/**
-	 * Approve the 201 profile
-	 */
 	approve: async (event) => {
 		const user = requireUserWithRole(event, 'hr_admin');
-		const { userId } = event.params;
+		const { profileId } = event.params;
 
 		if (!user.current_organization_id) {
 			return fail(400, { error: 'Organization required' });
 		}
 
-		if (!userId) {
-			return fail(400, { error: 'User ID required' });
+		if (!profileId) {
+			return fail(400, { error: 'Profile ID required' });
 		}
 
-		// Get current profile to verify status
 		const { data: profile, error: fetchError } = await event.locals.supabase
 			.from('employee_201_profiles')
-			.select('id, status')
-			.eq('user_id', userId)
-			.eq('organization_id', user.current_organization_id)
+			.select('id, status, organization_id')
+			.eq('id', profileId)
 			.maybeSingle();
 
 		if (fetchError) {
-			console.error('[admin/201/[userId]] Error fetching profile for approve:', fetchError);
+			console.error('[admin/201/[profileId]] Error fetching profile for approve:', fetchError);
 			return fail(500, { error: 'Failed to load profile' });
 		}
 
@@ -84,12 +83,14 @@ export const actions: Actions = {
 			return fail(404, { error: 'Profile not found' });
 		}
 
-		// Only submitted profiles can be approved
+		if (profile.organization_id !== user.current_organization_id) {
+			return fail(404, { error: 'Profile not found' });
+		}
+
 		if (profile.status !== 'submitted') {
 			return fail(400, { error: 'Only submitted profiles can be approved' });
 		}
 
-		// Update status to approved
 		const { data: updatedProfile, error: updateError } = await event.locals.supabase
 			.from('employee_201_profiles')
 			.update({
@@ -97,11 +98,12 @@ export const actions: Actions = {
 				approved_at: new Date().toISOString()
 			})
 			.eq('id', profile.id)
+			.eq('status', 'submitted')
 			.select()
 			.single();
 
 		if (updateError) {
-			console.error('[admin/201/[userId]] Error approving profile:', updateError);
+			console.error('[admin/201/[profileId]] Error approving profile:', updateError);
 			return fail(500, { error: 'Failed to approve profile' });
 		}
 
@@ -112,31 +114,26 @@ export const actions: Actions = {
 		};
 	},
 
-	/**
-	 * Reject the 201 profile
-	 */
 	reject: async (event) => {
 		const user = requireUserWithRole(event, 'hr_admin');
-		const { userId } = event.params;
+		const { profileId } = event.params;
 
 		if (!user.current_organization_id) {
 			return fail(400, { error: 'Organization required' });
 		}
 
-		if (!userId) {
-			return fail(400, { error: 'User ID required' });
+		if (!profileId) {
+			return fail(400, { error: 'Profile ID required' });
 		}
 
-		// Get current profile to verify status
 		const { data: profile, error: fetchError } = await event.locals.supabase
 			.from('employee_201_profiles')
-			.select('id, status')
-			.eq('user_id', userId)
-			.eq('organization_id', user.current_organization_id)
+			.select('id, status, organization_id')
+			.eq('id', profileId)
 			.maybeSingle();
 
 		if (fetchError) {
-			console.error('[admin/201/[userId]] Error fetching profile for reject:', fetchError);
+			console.error('[admin/201/[profileId]] Error fetching profile for reject:', fetchError);
 			return fail(500, { error: 'Failed to load profile' });
 		}
 
@@ -144,23 +141,26 @@ export const actions: Actions = {
 			return fail(404, { error: 'Profile not found' });
 		}
 
-		// Only submitted profiles can be rejected
+		if (profile.organization_id !== user.current_organization_id) {
+			return fail(404, { error: 'Profile not found' });
+		}
+
 		if (profile.status !== 'submitted') {
 			return fail(400, { error: 'Only submitted profiles can be rejected' });
 		}
 
-		// Update status to rejected
 		const { data: updatedProfile, error: updateError } = await event.locals.supabase
 			.from('employee_201_profiles')
 			.update({
 				status: 'rejected'
 			})
 			.eq('id', profile.id)
+			.eq('status', 'submitted')
 			.select()
 			.single();
 
 		if (updateError) {
-			console.error('[admin/201/[userId]] Error rejecting profile:', updateError);
+			console.error('[admin/201/[profileId]] Error rejecting profile:', updateError);
 			return fail(500, { error: 'Failed to reject profile' });
 		}
 

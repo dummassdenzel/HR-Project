@@ -76,7 +76,7 @@
 								</td>
 								<td class="whitespace-nowrap px-6 py-4 text-sm">
 									<a
-										href="/app/admin/201/{profile.user_id}"
+										href="/app/admin/201/{profile.id}"
 										class="text-primary hover:underline"
 									>
 										View Details
